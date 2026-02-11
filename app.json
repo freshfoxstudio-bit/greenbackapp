@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "Greenback Shopper",
+    "slug": "greenbackshopper",
+    "platforms": ["ios","android","web"],
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "sdkVersion": "48.0.0",
+    "jsEngine": "hermes"
+  }
+}

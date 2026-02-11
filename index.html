@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Greenback Shopper</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <!-- Audio Element -->
+    <audio id="jingle" autoplay muted>
+      <source src="greenbackjingle.mp3" type="audio/mpeg" />
+    </audio>
+
+    <div class="app-shell">
+      <!-- Splash Screen 1: Logo -->
+      <div id="splash-logo" class="splash-screen active">
+        <img src="logo.png" alt="Logo" class="splash-image" />
+      </div>
+
+      <!-- Splash Screen 2: Greenback Title -->
+      <div id="splash-greenback" class="splash-screen">
+        <img src="greenback.png" alt="Greenback" class="splash-image" />
+      </div>
+
+      <!-- Auth Page -->
+      <div id="page-auth" class="page">
+        <div class="auth-container">
+          <h1 class="app-title">🛒 Greenback</h1>
+          <div id="authForm">
+            <h2 id="authTitle">Sign In</h2>
+            <input type="tel" id="authPhone" placeholder="Phone Number" class="auth-input" />
+            <input type="password" id="authPassword" placeholder="Password" class="auth-input" />
+            <button id="signInBtn" class="auth-btn">Sign In</button>
+            <button id="toggleSignUpBtn" class="auth-toggle">Don't have an account? Sign Up</button>
+          </div>
+          <div id="signupForm" style="display:none;">
+            <h2>Create Account</h2>
+            <input type="tel" id="signupPhone" placeholder="Phone Number" class="auth-input" />
+            <input type="password" id="signupPassword" placeholder="Password" class="auth-input" />
+            <input type="password" id="signupConfirm" placeholder="Confirm Password" class="auth-input" />
+            <input type="text" id="signupReferral" placeholder="Have a referral code? (optional)" class="auth-input" />
+            <button id="signUpBtn" class="auth-btn">Create Account</button>
+            <button id="toggleSignInBtn" class="auth-toggle">Already have an account? Sign In</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="appContainer" style="display:none; height:100vh; display:flex; flex-direction:column;">
+        <header class="budget-bar">
+          <div class="budget-info">
+            <div class="budget-label">Budget: <span id="budgetDisplay">$100.00</span></div>
+            <div class="trip-savings">Saved: <span id="tripSavings">$0.00</span></div>
+          </div>
+        </header>
+
+        <main class="main-content">
+          <div id="page-scanner" class="page active">
+            <div class="scanner-container">
+              <div class="bill-info">
+                <p>Total Bill: <strong id="totalBill">$0.00</strong></p>
+                <p>Trip Savings: <strong id="scannerSavings">$0.00</strong></p>
+              </div>
+              <button id="scanBtn" class="scan-btn">TAP TO SCAN</button>
+              <div id="scanMessage" class="scan-message" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <div id="page-cart" class="page">
+            <div class="page-header"><h2>Shopping Cart</h2></div>
+            <div id="cartList" class="cart-list"></div>
+            <div class="cart-footer">
+              <p>Subtotal: <strong id="cartSubtotal">$0.00</strong></p>
+              <p>Savings: <strong id="cartSavings">$0.00</strong></p>
+              <button class="back-btn" data-page="page-scanner">Back to Scanner</button>
+            </div>
+          </div>
+
+          <div id="page-sales" class="page">
+            <div class="page-header"><h2>Deals & Sales</h2></div>
+            <div id="salesList" class="sales-list"></div>
+            <button class="back-btn" data-page="page-scanner">Back to Scanner</button>
+          </div>
+
+          <div id="page-profile" class="page">
+            <div class="page-header"><h2>Account Settings</h2></div>
+            <div class="profile-container">
+              <div class="profile-section">
+                <h3>Subscription Status</h3>
+                <p>Plan: <strong id="planStatus">Free Trial</strong></p>
+                <p>Days Left: <strong id="daysLeft">30</strong></p>
+              </div>
+              
+              <div class="profile-section">
+                <h3>Account Info</h3>
+                <p>Phone: <strong id="profilePhone"></strong></p>
+              </div>
+              
+              <div class="profile-section">
+                <h3>Shared Account (Spouse/Family)</h3>
+                <input type="tel" id="altPhone" placeholder="Alternative phone number" class="auth-input" />
+                <button id="addAltPhoneBtn" class="auth-btn">Add/Update</button>
+                <p id="altPhoneDisplay" style="margin-top:10px; color:var(--neon);"></p>
+              </div>
+              
+              <div class="profile-section">
+                <h3>Referral Program</h3>
+                <div class="referral-box">
+                  <p>Your Code: <strong id="referralCode">LOAD...</strong> <button id="copyCodeBtn" class="copy-btn">Copy</button></p>
+                  <p>Friends Referred: <strong id="referralCount">0</strong>/25</p>
+                  <div id="superStatus" style="display:none; color:var(--neon); font-weight:bold; margin-top:8px;">🌟 SUPER REFERRER - Lifetime Free! 🌟</div>
+                  <p style="font-size:12px; color:var(--muted); margin-top:10px;">Share your code! Both get 1 month free when friend signs up. Get 25 friends = Lifetime Free.</p>
+                </div>
+              </div>
+              
+              <div class="profile-section">                <h3>Your Savings</h3>
+                <div class=\"savings-grid\">
+                  <div class=\"savings-card\">
+                    <div class=\"savings-label\">Trip Savings</div>
+                    <div class=\"savings-amount\" id=\"currentSavings\">$0.00</div>
+                  </div>
+                  <div class=\"savings-card\">
+                    <div class=\"savings-label\">This Month</div>
+                    <div class=\"savings-amount\" id=\"monthSavings\">$0.00</div>
+                  </div>
+                  <div class=\"savings-card\">
+                    <div class=\"savings-label\">This Year</div>
+                    <div class=\"savings-amount\" id=\"yearSavings\">$0.00</div>
+                  </div>
+                  <div class=\"savings-card\">
+                    <div class=\"savings-label\">Lifetime</div>
+                    <div class=\"savings-amount\" id=\"lifetimeSavings\">$0.00</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class=\"profile-section\">                <h3>Budget Management</h3>
+                <input type="number" id="budgetInput" min="0" step="0.01" placeholder="Enter budget amount" class="auth-input" />
+                <button id="budgetBtn" class="auth-btn">Update Budget</button>
+              </div>
+              
+              <button id="logoutBtn" class="auth-btn logout-btn">Log Out</button>
+            </div>
+          </div>
+        </main>
+
+        <nav class="bottom-nav" role="navigation" aria-label="Main navigation">
+          <button class="nav-item active" data-page="page-scanner">Scan</button>
+          <button class="nav-item" data-page="page-cart">Cart</button>
+          <button class="nav-item" data-page="page-sales">Deals</button>
+          <button class="nav-item" data-page="page-profile">Profile</button>
+        </nav>
+      </div>
+    </div>
+
+    <script src="js/app.js"></script>
+  </body>
+</html>
