@@ -5,7 +5,35 @@
     "platforms": ["ios","android","web"],
     "version": "1.0.0",
     "orientation": "portrait",
-    "sdkVersion": "48.0.0",
-    "jsEngine": "hermes"
+    "sdkVersion": "54.0.0",
+    "jsEngine": "hermes",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#071012"
+    },
+    "ios": {
+      "bundleIdentifier": "com.freshfoxstudio.greenbackshopper",
+      "buildNumber": "1.0.0",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app uses the camera to scan receipts and barcodes for budget tracking.",
+        "NSMicrophoneUsageDescription": "This app does not access the microphone."
+      }
+    },
+    "android": {
+      "package": "com.freshfoxstudio.greenbackshopper",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#071012"
+      },
+      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    }
   }
 }

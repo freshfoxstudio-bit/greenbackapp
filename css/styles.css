@@ -129,7 +129,42 @@ body{
 
 .empty-state{text-align:center;color:var(--muted);padding:40px 20px}
 
+/* SALE ITEMS */
+.sale-item{background:rgba(0,255,106,0.04);border:1px solid rgba(0,255,106,0.1);
+  border-radius:12px;padding:16px;margin-bottom:12px;transition:all 0.2s}
+.sale-item:hover{background:rgba(0,255,106,0.06);border-color:rgba(0,255,106,0.2)}
+.sale-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.sale-emoji{font-size:24px}
+.sale-header h3{margin:0;color:#e6fff2;font-size:16px}
+.sale-pricing{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.regular-price{color:var(--muted);text-decoration:line-through;font-size:14px}
+.sale-price{color:var(--neon);font-weight:700;font-size:18px}
+.savings-amount{color:var(--neon);font-size:12px;background:rgba(0,255,106,0.1);
+  padding:4px 8px;border-radius:4px}
+.add-to-cart-btn{background:linear-gradient(90deg,var(--neon),#00cc55);
+  color:var(--bg);border:none;padding:8px 16px;border-radius:6px;
+  font-weight:600;cursor:pointer;transition:all 0.2s;width:100%}
+.add-to-cart-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,255,106,0.3)}
+
+/* SCAN BUTTON GLOW EFFECT */
+.scan-btn.glow{animation:scanGlow 1.5s ease-in-out infinite}
+@keyframes scanGlow{
+  0%,100%{box-shadow:0 0 20px rgba(0,255,106,0.3)}
+  50%{box-shadow:0 0 40px rgba(0,255,106,0.6)}
+}
+
+/* SUBSCRIPTION PROMPT */
+.subscription-prompt{background:linear-gradient(135deg,rgba(0,255,106,0.1),rgba(0,255,106,0.05));
+  border:2px solid var(--neon);border-radius:12px;padding:20px;margin:20px 0;
+  text-align:center}
+.subscription-prompt h3{color:var(--neon);margin:0 0 10px 0}
+.subscribe-btn{background:var(--neon);color:var(--bg);border:none;
+  padding:12px 24px;border-radius:8px;font-weight:700;font-size:16px;
+  cursor:pointer;transition:all 0.2s;margin-top:10px}
+.subscribe-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,255,106,0.4)}
+
 @media (max-width:420px){
   .scan-btn{width:150px;height:150px;font-size:16px}
   .sales-list{grid-template-columns:1fr}
+  .sale-pricing{flex-direction:column;align-items:flex-start;gap:4px}
 }
