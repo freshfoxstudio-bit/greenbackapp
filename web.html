@@ -187,10 +187,6 @@
                         <button id="verifyBtn" class="auth-btn">Verify</button>
                     </div>
                 </div>
-                
-                <button id="clearDataBtn" class="auth-btn" style="background: #ff4444; margin-top: 20px; width: auto; padding: 10px 20px;">🗑️ Clear All Data</button>
-                    <button id="showSigninBtn" class="auth-toggle">Already have an account? Sign In</button>
-                </div>
             </div>
         </div>
         
@@ -1070,21 +1066,6 @@
             cartItems = [];
             document.getElementById('authPage').classList.add('active');
             document.getElementById('appPages').classList.add('hidden');
-        };
-        
-        // Clear all data button
-        document.getElementById('clearDataBtn').onclick = () => {
-            if (confirm('Clear all data? This will log you out and remove all saved information.')) {
-                localStorage.clear();
-                currentUser = null;
-                cartItems = [];
-                scannedItems = [];
-                userLocation = { postalCode: null, taxRate: 0.13 };
-                document.getElementById('phoneInput').value = '';
-                document.getElementById('codeInput').value = '';
-                document.getElementById('codeSection').classList.add('hidden');
-                alert('All data cleared! You can now sign up with a different number.');
-            }
         };
         
         // Check for existing user
