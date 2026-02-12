@@ -194,7 +194,7 @@
                     <button id="signinBtn" class="auth-btn">Sign In</button>
                 </div>
                 
-                <!-- Code Verification -->
+                <!-- Code Verification (hidden by default) -->
                 <div id="codeSection" class="hidden">
                     <input type="text" id="codeInput" class="auth-input" placeholder="Enter verification code" maxlength="6">
                     <button id="verifyBtn" class="auth-btn">Verify</button>
@@ -218,6 +218,16 @@
             <div id="scanPage" class="page active">
                 <button id="scanButton" class="scan-btn">SCAN</button>
                 <div id="scanMessage" class="scan-message">Ready to scan!</div>
+                
+                <!-- Phone Verification Timer -->
+                <div id="verificationTimer" class="profile-section" style="margin-top: 20px; display: none;">
+                    <h4 style="color: #ff4444; margin-bottom: 10px;">⚠️ PHONE VERIFICATION REQUIRED</h4>
+                    <div style="background: rgba(255,68,68,0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #ff4444;" id="countdown">36:00:00</div>
+                        <div style="font-size: 14px; color: #ff4444; margin-top: 5px;">Time remaining to verify your phone number</div>
+                        <button id="resendCodeBtn" class="auth-btn" style="background: #ff6b35; margin-top: 10px;">Resend Code</button>
+                    </div>
+                </div>
                 
                 <!-- Monthly Savings Display -->
                 <div class="profile-section" style="margin-top: 20px;">
@@ -623,6 +633,32 @@
             alert(`Verification code sent to ${phone}: ${code}`);
         };
         
+        document.getElementById('verifyBtn').onclick = () => {
+            const phone = document.getElementById('phoneInput').value;
+            const code = document.getElementById('codeInput').value;
+            
+            const savedCode = localStorage.getItem('verificationCode_' + phone);
+            const expiry = localStorage.getItem('codeExpiry_' + phone);
+            
+            if (Date.now() > parseInt(expiry)) {
+                alert('Code expired. Please request a new one.');
+                return;
+            }
+            
+            if (code === savedCode) {
+                currentUser = JSON.parse(localStorage.getItem('greenbackUser_' + phone) || '{}');
+                currentUser.isPhoneVerified = true; // Mark phone as verified
+                localStorage.setItem('greenbackUser_' + phone, JSON.stringify(currentUser));
+                
+                document.getElementById('authPage').classList.remove('active');
+                document.getElementById('appPages').classList.remove('hidden');
+                
+                alert('Phone verified! Login successful!');
+            } else {
+                alert('Invalid code. Please try again.');
+            }
+        };
+        
         document.getElementById('signupBtn').onclick = () => {
             const phone = document.getElementById('signupPhone').value;
             const password = document.getElementById('signupPassword').value;
@@ -635,34 +671,44 @@
             
             currentUser = {
                 phone,
-                password,
-                referralCode: 'GREEN' + Math.random().toString(36).substr(2, 9).toUpperCase(),
-                referralCount: 0,
                 trialDaysLeft: 30,
+                isSubscribed: false,
                 savings: { current: 0, month: 0, year: 0, lifetime: 0 }
             };
             
             localStorage.setItem('greenbackUser', JSON.stringify(currentUser));
-            showApp();
+            
+            document.getElementById('authPage').classList.remove('active');
+            document.getElementById('appPages').classList.remove('hidden');
+            
+            alert('Account created successfully!');
         };
         
         document.getElementById('signinBtn').onclick = () => {
-            const phone = document.getElementById('phoneInput').value;
-            const password = document.getElementById('passwordInput').value;
+            const phone = document.getElementById('signinPhone').value;
+            const password = document.getElementById('signinPassword').value;
             
-            const saved = localStorage.getItem('greenbackUser');
-            if (!saved) {
-                alert('Account not found');
+            if (!phone || !password) {
+                alert('Please enter phone and password');
                 return;
             }
             
-            currentUser = JSON.parse(saved);
-            if (currentUser.password !== password) {
-                alert('Wrong password');
-                return;
-            }
+            // Simple login - accept any password for demo
+            currentUser = {
+                phone,
+                trialDaysLeft: 30,
+                isSubscribed: false,
+                isPhoneVerified: false, // Add phone verification status
+                signupTime: Date.now(), // Track signup time
+                savings: { current: 0, month: 0, year: 0, lifetime: 0 }
+            };
             
-            showApp();
+            localStorage.setItem('greenbackUser', JSON.stringify(currentUser));
+            
+            document.getElementById('authPage').classList.remove('active');
+            document.getElementById('appPages').classList.remove('hidden');
+            
+            alert('Login successful!');
         };
         
         function showApp() {
@@ -731,12 +777,59 @@
             updateCart();
         };
         
-        // Update scan page monthly savings
+        // Update scan page monthly savings and verification timer
         function updateScanPageSavings() {
             if (currentUser && currentUser.savings) {
                 document.getElementById('scanPageMonthlySavings').textContent = '$' + currentUser.savings.month.toFixed(2);
             }
+            
+            // Show/hide verification timer
+            if (currentUser && !currentUser.isPhoneVerified) {
+                const timerDiv = document.getElementById('verificationTimer');
+                timerDiv.style.display = 'block';
+                
+                // Start countdown
+                const startTime = currentUser.signupTime || Date.now();
+                const updateCountdown = () => {
+                    const now = Date.now();
+                    const elapsed = now - startTime;
+                    const remaining = Math.max(0, 36 * 60 * 60 * 1000 - elapsed);
+                    
+                    const hours = Math.floor(remaining / (60 * 60 * 1000));
+                    const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+                    const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+                    
+                    document.getElementById('countdown').textContent = 
+                        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                };
+                
+                updateCountdown();
+                const countdownInterval = setInterval(updateCountdown, 1000);
+                
+                // Store interval to clear later
+                timerDiv.dataset.intervalId = countdownInterval;
+            } else {
+                const timerDiv = document.getElementById('verificationTimer');
+                if (timerDiv) {
+                    timerDiv.style.display = 'none';
+                    if (timerDiv.dataset.intervalId) {
+                        clearInterval(timerDiv.dataset.intervalId);
+                    }
+                }
+            }
         }
+        
+        // Resend code button
+        document.getElementById('resendCodeBtn').onclick = () => {
+            if (!currentUser) return;
+            
+            const phone = currentUser.phone;
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            localStorage.setItem('verificationCode_' + phone, code);
+            localStorage.setItem('codeExpiry_' + phone, Date.now() + 300000);
+            
+            alert(`New verification code sent to ${phone}: ${code}`);
+        };
         
         // Paywall enforcement
         function enforcePaywall() {
@@ -745,6 +838,15 @@
             // Admin access - never paywalled
             if (currentUser.phone === ADMIN_PHONE) {
                 return true;
+            }
+            
+            // Check if phone is verified and within 36 hours
+            if (!currentUser.isPhoneVerified) {
+                const hoursElapsed = (Date.now() - currentUser.signupTime) / (1000 * 60 * 60);
+                if (hoursElapsed >= 36) {
+                    alert('Account locked. Please verify your phone number.');
+                    return false;
+                }
             }
             
             const daysLeft = currentUser.trialDaysLeft || 30;
@@ -1100,6 +1202,31 @@
             document.getElementById('authPage').classList.add('active');
             document.getElementById('appPages').classList.add('hidden');
         };
+        
+        // Verification timer and lockout system
+        function startVerificationTimer(phone) {
+            const checkInterval = setInterval(() => {
+                const user = JSON.parse(localStorage.getItem('greenbackUser_' + phone) || '{}');
+                if (user.signupTime) {
+                    const hoursElapsed = (Date.now() - user.signupTime) / (1000 * 60 * 60);
+                    
+                    if (hoursElapsed >= 36 && !user.isPhoneVerified) {
+                        // Lock account - 36 hours passed, not verified
+                        lockAccount(phone);
+                        clearInterval(checkInterval);
+                    }
+                }
+            }, 60000); // Check every minute
+        }
+        
+        function lockAccount(phone) {
+            // Disable app access
+            currentUser = null;
+            document.getElementById('authPage').classList.add('active');
+            document.getElementById('appPages').classList.add('hidden');
+            
+            alert('Account locked. Please verify your phone number to unlock access.');
+        }
         
         // Check for existing user
         const savedUser = localStorage.getItem('greenbackUser');
