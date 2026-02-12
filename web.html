@@ -222,10 +222,10 @@
                 <!-- Location for Tax Calculation -->
                 <div class="profile-section" style="margin-top: 15px;">
                     <h4 style="color: var(--neon); margin-bottom: 10px;">📍 Location for Tax</h4>
-                    <input type="text" id="postalCodeInput" class="auth-input" placeholder="Enter Postal/ZIP Code" style="margin-bottom: 10px;">
+                    <input type="text" id="postalCodeInput" class="auth-input" placeholder="Enter Postal/ZIP Code (e.g., L1A 2B3 or 90210)" style="margin-bottom: 10px;">
                     <button id="updateLocationBtn" class="auth-btn" style="width: auto; padding: 10px 20px;">Update Location</button>
                     <p style="font-size: 12px; color: var(--muted); margin-top: 8px;">
-                        Current: <span id="currentPostalCode">Not set</span> | Tax Rate: <span id="currentTaxRate">7.25%</span>
+                        Current: <span id="currentPostalCode">Not set</span> | Tax Rate: <span id="currentTaxRate">13%</span>
                     </p>
                 </div>
             </div>
@@ -291,10 +291,16 @@
         let currentUser = null;
         let cartItems = [];
         let scanning = false;
-        let userLocation = { postalCode: null, taxRate: 0.0725 };
+        let userLocation = { postalCode: null, taxRate: 0.13 }; // Default to Ontario 13%
+        
+        // Admin access phone number
+        const ADMIN_PHONE = '9053790718';
         
         // Tax rates by state/province
         const taxRates = {
+            // Canadian provinces
+            'ON': 0.13, 'QC': 0.14975, 'BC': 0.12, 'AB': 0.05, 'MB': 0.12, 'SK': 0.11, 'NS': 0.15, 'NB': 0.15, 'NL': 0.15, 'PE': 0.15, 'NT': 0.05, 'NU': 0.05, 'YT': 0.05,
+            // US states
             'AL': 0.04, 'AK': 0.00, 'AZ': 0.056, 'AR': 0.065, 'CA': 0.0725, 'CO': 0.029, 'CT': 0.0635,
             'DE': 0.00, 'FL': 0.06, 'GA': 0.04, 'HI': 0.04, 'ID': 0.06, 'IL': 0.0625, 'IN': 0.07,
             'IA': 0.06, 'KS': 0.065, 'KY': 0.06, 'LA': 0.0445, 'ME': 0.055, 'MD': 0.06,
@@ -302,8 +308,7 @@
             'NE': 0.055, 'NV': 0.0685, 'NH': 0.00, 'NJ': 0.06625, 'NM': 0.05125, 'NY': 0.08,
             'NC': 0.0475, 'ND': 0.05, 'OH': 0.0575, 'OK': 0.045, 'OR': 0.00, 'PA': 0.06,
             'RI': 0.07, 'SC': 0.06, 'SD': 0.045, 'TN': 0.07, 'TX': 0.0625, 'UT': 0.0595,
-            'VT': 0.06, 'VA': 0.053, 'WA': 0.065, 'WV': 0.06, 'WI': 0.05, 'WY': 0.04,
-            'ON': 0.13, 'QC': 0.14975, 'BC': 0.12, 'AB': 0.05, 'MB': 0.12
+            'VT': 0.06, 'VA': 0.053, 'WA': 0.065, 'WV': 0.06, 'WI': 0.05, 'WY': 0.04
         };
         
         // Real coupon API integration
@@ -661,24 +666,39 @@
                 return;
             }
             
-            // Extract state/province from postal code (simplified)
-            let stateCode = 'CA'; // default
-            if (postalCode.length >= 2) {
+            // Extract state/province from postal code
+            let stateCode = 'ON'; // default to Ontario
+            let taxRate = 0.13; // Ontario default
+            
+            // Canadian postal code format: A1A 1A1
+            if (postalCode.length >= 3 && postalCode[1] >= '0' && postalCode[1] <= '9') {
+                const firstLetter = postalCode[0].toUpperCase();
+                const provinceMap = {
+                    'A': 'NL', 'B': 'NS', 'C': 'PE', 'E': 'NB', 'G': 'QC', 'H': 'QC', 'J': 'QC',
+                    'K': 'ON', 'L': 'ON', 'M': 'ON', 'N': 'ON', 'P': 'ON', 'R': 'MB', 'S': 'SK',
+                    'T': 'AB', 'V': 'BC', 'X': 'NT', 'Y': 'YT'
+                };
+                stateCode = provinceMap[firstLetter] || 'ON';
+                taxRate = taxRates[stateCode] || 0.13;
+            }
+            // US ZIP code format
+            else if (postalCode.length >= 2) {
                 const firstTwo = postalCode.substring(0, 2).toUpperCase();
                 if (taxRates[firstTwo]) {
                     stateCode = firstTwo;
+                    taxRate = taxRates[firstTwo];
                 }
             }
             
             userLocation.postalCode = postalCode;
-            userLocation.taxRate = taxRates[stateCode] || 0.0725;
+            userLocation.taxRate = taxRate;
             
             localStorage.setItem('userLocation', JSON.stringify(userLocation));
             
             document.getElementById('currentPostalCode').textContent = postalCode;
-            document.getElementById('currentTaxRate').textContent = (userLocation.taxRate * 100).toFixed(2) + '%';
+            document.getElementById('currentTaxRate').textContent = (taxRate * 100).toFixed(2) + '%';
             
-            alert(`Location updated to ${postalCode}\nTax rate: ${(userLocation.taxRate * 100).toFixed(2)}%`);
+            alert(`Location updated to ${postalCode}\nProvince/State: ${stateCode}\nTax rate: ${(taxRate * 100).toFixed(2)}%`);
             
             // Update cart to show new tax
             updateCart();
@@ -694,6 +714,11 @@
         // Paywall enforcement
         function enforcePaywall() {
             if (!currentUser) return false;
+            
+            // Admin access - never paywalled
+            if (currentUser.phone === ADMIN_PHONE) {
+                return true;
+            }
             
             const daysLeft = currentUser.trialDaysLeft || 30;
             const isSubscribed = currentUser.isSubscribed || false;
@@ -972,16 +997,25 @@
         
         // Profile functions with savings dashboard
         function updateProfile() {
+            const profileInfo = document.getElementById('profileInfo');
             if (!currentUser) return;
             
-            document.getElementById('profilePhone').textContent = currentUser.phone;
-            document.getElementById('planStatus').textContent = currentUser.trialDaysLeft > 0 ? 'Free Trial' : 'Expired';
-            document.getElementById('daysLeft').textContent = Math.max(0, currentUser.trialDaysLeft);
-            document.getElementById('referralCode').textContent = currentUser.referralCode;
-            document.getElementById('referralCount').textContent = currentUser.referralCount;
+            let adminBadge = '';
+            if (currentUser.phone === ADMIN_PHONE) {
+                adminBadge = '<div style="background: gold; color: black; padding: 5px 10px; border-radius: 5px; font-weight: bold; margin-bottom: 10px;">👑 ADMIN ACCESS</div>';
+            }
             
-            // Update savings dashboard
-            const savings = currentUser.savings || { current: 0, month: 0, year: 0, lifetime: 0 };
+            profileInfo.innerHTML = `
+                ${adminBadge}
+                <p><strong>Phone:</strong> ${currentUser.phone}</p>
+                <p><strong>Trial Days Left:</strong> ${currentUser.trialDaysLeft || 30}</p>
+                <p><strong>Subscription:</strong> ${currentUser.isSubscribed ? 'Premium' : 'Free'}</p>
+                <p><strong>Current Trip Savings:</strong> $${(currentUser.savings?.current || 0).toFixed(2)}</p>
+                <p><strong>Monthly Savings:</strong> $${(currentUser.savings?.month || 0).toFixed(2)}</p>
+                <p><strong>Yearly Savings:</strong> $${(currentUser.savings?.year || 0).toFixed(2)}</p>
+                <p><strong>Lifetime Savings:</strong> $${(currentUser.savings?.lifetime || 0).toFixed(2)}</p>
+                ${currentUser.spousePhone ? `<p><strong>Spouse:</strong> ${currentUser.spousePhone}</p>` : ''}
+            `;
             document.getElementById('currentTripSavings').textContent = '$' + savings.current.toFixed(2);
             document.getElementById('monthlySavings').textContent = '$' + savings.month.toFixed(2);
             document.getElementById('yearlySavings').textContent = '$' + savings.year.toFixed(2);
