@@ -176,21 +176,19 @@
         <!-- Auth Page -->
         <div id="authPage" class="page active">
             <div class="auth-container">
-                <h1 class="app-title">🛒 Greenback</h1>
+                <h1>🛒 Greenback Shopper</h1>
+                <p class="auth-subtitle">Scan & Save</p>
                 
-                <div id="signinForm">
-                    <input type="tel" id="phoneInput" class="auth-input" placeholder="Phone Number">
-                    <input type="password" id="passwordInput" class="auth-input" placeholder="Password">
-                    <button id="signinBtn" class="auth-btn">Sign In</button>
-                    <button id="showSignupBtn" class="auth-toggle">Don't have an account? Sign Up</button>
+                <div class="auth-form">
+                    <input type="tel" id="phoneInput" class="auth-input" placeholder="Enter phone number" maxlength="10">
+                    <button id="sendCodeBtn" class="auth-btn">Send Code</button>
+                    <div id="codeSection" class="hidden">
+                        <input type="text" id="codeInput" class="auth-input" placeholder="Enter verification code" maxlength="6">
+                        <button id="verifyBtn" class="auth-btn">Verify</button>
+                    </div>
                 </div>
                 
-                <div id="signupForm" class="hidden">
-                    <input type="tel" id="signupPhone" class="auth-input" placeholder="Phone Number">
-                    <input type="password" id="signupPassword" class="auth-input" placeholder="Password">
-                    <input type="password" id="signupConfirm" class="auth-input" placeholder="Confirm Password">
-                    <input type="text" id="signupReferral" class="auth-input" placeholder="Referral Code (optional)">
-                    <button id="signupBtn" class="auth-btn">Sign Up</button>
+                <button id="clearDataBtn" class="auth-btn" style="background: #ff4444; margin-top: 20px; width: auto; padding: 10px 20px;">🗑️ Clear All Data</button>
                     <button id="showSigninBtn" class="auth-toggle">Already have an account? Sign In</button>
                 </div>
             </div>
@@ -1072,6 +1070,21 @@
             cartItems = [];
             document.getElementById('authPage').classList.add('active');
             document.getElementById('appPages').classList.add('hidden');
+        };
+        
+        // Clear all data button
+        document.getElementById('clearDataBtn').onclick = () => {
+            if (confirm('Clear all data? This will log you out and remove all saved information.')) {
+                localStorage.clear();
+                currentUser = null;
+                cartItems = [];
+                scannedItems = [];
+                userLocation = { postalCode: null, taxRate: 0.13 };
+                document.getElementById('phoneInput').value = '';
+                document.getElementById('codeInput').value = '';
+                document.getElementById('codeSection').classList.add('hidden');
+                alert('All data cleared! You can now sign up with a different number.');
+            }
         };
         
         // Check for existing user
