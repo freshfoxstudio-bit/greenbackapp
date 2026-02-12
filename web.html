@@ -691,9 +691,69 @@
             }
         }
         
-        // Calculate tax
-        function calculateTax(amount) {
-            return amount * userLocation.taxRate;
+        // Paywall enforcement
+        function enforcePaywall() {
+            if (!currentUser) return false;
+            
+            const daysLeft = currentUser.trialDaysLeft || 30;
+            const isSubscribed = currentUser.isSubscribed || false;
+            
+            if (daysLeft <= 0 && !isSubscribed) {
+                showPaywallModal();
+                return false;
+            }
+            return true;
+        }
+        
+        // Show paywall modal
+        function showPaywallModal() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.9); z-index: 1000; display: flex;
+                align-items: center; justify-content: center;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: var(--panel); padding: 30px; border-radius: 12px; max-width: 350px; text-align: center;">
+                    <h3 style="color: var(--neon); margin-bottom: 20px;">🔒 Premium Required</h3>
+                    <p style="margin-bottom: 20px;">Your free trial has ended. Subscribe to continue using all features.</p>
+                    
+                    <button onclick="subscribe('monthly')" style="background: var(--neon); color: var(--bg); border: none; padding: 12px 20px; border-radius: 8px; margin: 10px; cursor: pointer; width: 100%;">
+                        Monthly - $9.99
+                    </button>
+                    <button onclick="subscribe('yearly')" style="background: var(--neon); color: var(--bg); border: none; padding: 12px 20px; border-radius: 8px; margin: 10px; cursor: pointer; width: 100%;">
+                        Yearly - $99.99 (Save 17%)
+                    </button>
+                    <button onclick="closePaywall()" style="background: #666; color: white; border: none; padding: 8px 16px; border-radius: 6px; margin-top: 10px; cursor: pointer;">
+                        Maybe Later
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        // Subscribe function
+        function subscribe(plan) {
+            // In production, integrate with Stripe/PayPal
+            alert(`Redirecting to payment for ${plan} subscription...`);
+            
+            // Simulate successful payment
+            setTimeout(() => {
+                currentUser.isSubscribed = true;
+                currentUser.subscriptionPlan = plan;
+                currentUser.subscriptionDate = new Date().toISOString();
+                localStorage.setItem('greenbackUser', JSON.stringify(currentUser));
+                closePaywall();
+                alert('Subscription successful! Welcome to Premium!');
+            }, 2000);
+        }
+        
+        // Close paywall
+        function closePaywall() {
+            const modal = document.querySelector('div[style*="position: fixed"]');
+            if (modal) modal.remove();
         }
         
         // Navigation - load deals immediately when accessed
@@ -713,96 +773,51 @@
             };
         });
         
-        // Enhanced scan with real product lookup
+        // Scan button with paywall
         document.getElementById('scanButton').onclick = async () => {
+            if (!enforcePaywall()) return;
+            
             if (scanning) return;
             scanning = true;
-            
             const btn = document.getElementById('scanButton');
             const msg = document.getElementById('scanMessage');
-            
-            btn.style.background = 'linear-gradient(135deg, #00ff6a, #00cc55)';
-            msg.textContent = 'Scanning...';
+            btn.style.background = '#ff6b35';
+            msg.textContent = '📷 Requesting camera access...';
             
             try {
-                await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                msg.textContent = 'Camera access granted!';
-            } catch (err) {
-                msg.textContent = 'Camera denied - demo mode';
-            }
-            
-            setTimeout(async () => {
-                // Simulate barcode scan
-                const mockBarcode = Math.random().toString().substr(2, 12);
-                msg.textContent = `Looking up product: ${mockBarcode}...`;
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                stream.getTracks().forEach(track => track.stop());
+                msg.textContent = '✓ Camera access granted! Scanning...';
                 
-                // Simulate product API lookup
-                const product = await lookupProduct(mockBarcode);
-                
-                btn.style.background = 'linear-gradient(135deg, #05211a, #0a3428)';
-                scanning = false;
-                
-                if (product) {
-                    msg.textContent = `Found: ${product.name} - ${product.coupon}`;
-                    cartItems.push(product);
-                    updateCart();
-                } else {
-                    // Fallback to demo deal
-                    const deal = deals[Math.floor(Math.random() * deals.length)];
-                    cartItems.push(deal);
-                    updateCart();
-                    msg.textContent = `Added ${deal.name} to cart!`;
-                }
-            }, 2000);
-        };
-        
-        // Real product lookup API
-        async function lookupProduct(barcode) {
-            try {
-                // Simulate API call to product database
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Mock product database with real UPC codes
-                const productDB = {
-                    '041196910015': { name: 'Coca-Cola 2L', price: 2.49, category: 'beverages', emoji: '🥤' },
-                    '04100003927': { name: 'Oreos', price: 4.29, category: 'snacks', emoji: '🍿' },
-                    '01111003849': { name: 'Ben & Jerrys Ice Cream', price: 5.49, category: 'frozen', emoji: '🍦' },
-                    '07874207007': { name: 'Lays Classic Chips', price: 4.99, category: 'snacks', emoji: '🍿' },
-                    '04126331211': { name: 'Tide Pods', price: 12.99, category: 'household', emoji: '🧻' }
-                };
-                
-                // Check if barcode exists
-                let product = productDB[barcode];
-                
-                if (!product) {
-                    // Try partial match or generate random product
-                    const products = Object.values(productDB);
-                    product = products[Math.floor(Math.random() * products.length)];
-                }
-                
-                // Add coupon/discount info
-                if (product) {
-                    const discountPercent = Math.floor(Math.random() * 30) + 10; // 10-40% off
-                    const savings = product.price * (discountPercent / 100);
+                setTimeout(async () => {
+                    const mockBarcode = Math.random().toString().substr(2, 12);
+                    msg.textContent = `🔍 Scanning barcode: ${mockBarcode}...`;
                     
-                    return {
-                        ...product,
-                        sale: product.price - savings,
-                        savings: savings,
-                        coupon: `🎫 ${discountPercent}% OFF`,
-                        source: 'Product Match',
-                        barcode: barcode
-                    };
-                }
-                
-                return null;
-            } catch (error) {
-                console.log('Product lookup failed:', error);
-                return null;
+                    const product = await lookupProduct(mockBarcode);
+                    
+                    if (product) {
+                        msg.textContent = `✅ Found: ${product.name} - ${product.coupon}`;
+                        cartItems.push(product);
+                        updateCart();
+                    } else {
+                        msg.textContent = '✅ Scan complete! Item added to cart.';
+                        const fallback = { name: 'Demo Item', price: 5.99, sale: 3.99, savings: 2.00, emoji: '🛒' };
+                        cartItems.push(fallback);
+                        updateCart();
+                    }
+                    
+                    btn.style.background = '';
+                    scanning = false;
+                }, 2000);
+            } catch (err) {
+                btn.style.background = '';
+                scanning = false;
+                msg.textContent = '⚠️ Camera unavailable - adding demo item';
+                const fallback = { name: 'Demo Item', price: 5.99, sale: 3.99, savings: 2.00, emoji: '🛒' };
+                cartItems.push(fallback);
+                updateCart();
             }
-        }
-        
-        // Real flyer image integration
+        };
         async function fetchFlyerImage(productName, store) {
             try {
                 // Simulate API call to fetch real flyer clipping
