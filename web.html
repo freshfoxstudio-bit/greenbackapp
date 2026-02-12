@@ -179,16 +179,29 @@
                 <h1>🛒 Greenback Shopper</h1>
                 <p class="auth-subtitle">Scan & Save</p>
                 
-                <div class="auth-form">
-                    <input type="tel" id="phoneInput" class="auth-input" placeholder="Enter phone number" maxlength="10">
-                    <button id="sendCodeBtn" class="auth-btn">Send Code</button>
-                    <div id="codeSection" class="hidden">
-                        <input type="text" id="codeInput" class="auth-input" placeholder="Enter verification code" maxlength="6">
-                        <button id="verifyBtn" class="auth-btn">Verify</button>
-                    </div>
+                <!-- Sign Up Form -->
+                <div id="signupForm" class="auth-form">
+                    <input type="tel" id="signupPhone" class="auth-input" placeholder="Enter phone number" maxlength="10">
+                    <input type="password" id="signupPassword" class="auth-input" placeholder="Create password" maxlength="20">
+                    <input type="password" id="signupConfirm" class="auth-input" placeholder="Confirm password" maxlength="20">
+                    <button id="signupBtn" class="auth-btn">Sign Up</button>
+                </div>
+                
+                <!-- Sign In Form -->
+                <div id="signinForm" class="auth-form hidden">
+                    <input type="tel" id="signinPhone" class="auth-input" placeholder="Enter phone number" maxlength="10">
+                    <input type="password" id="signinPassword" class="auth-input" placeholder="Enter password" maxlength="20">
+                    <button id="signinBtn" class="auth-btn">Sign In</button>
+                </div>
+                
+                <!-- Code Verification -->
+                <div id="codeSection" class="hidden">
+                    <input type="text" id="codeInput" class="auth-input" placeholder="Enter verification code" maxlength="6">
+                    <button id="verifyBtn" class="auth-btn">Verify</button>
                 </div>
                 
                 <button id="showSigninBtn" class="auth-toggle">Already have an account? Sign In</button>
+                <button id="showSignupBtn" class="auth-toggle">Need an account? Sign Up</button>
             </div>
         </div>
         
@@ -590,6 +603,24 @@
         document.getElementById('showSigninBtn').onclick = () => {
             document.getElementById('signupForm').classList.add('hidden');
             document.getElementById('signinForm').classList.remove('hidden');
+        };
+        
+        document.getElementById('sendCodeBtn').onclick = () => {
+            const phone = document.getElementById('phoneInput').value;
+            if (!phone || phone.length < 10) {
+                alert('Please enter a valid phone number');
+                return;
+            }
+            
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            localStorage.setItem('verificationCode_' + phone, code);
+            localStorage.setItem('codeExpiry_' + phone, Date.now() + 300000); // 5 minutes
+            
+            document.getElementById('phoneInput').disabled = true;
+            document.getElementById('sendCodeBtn').textContent = 'Code Sent!';
+            document.getElementById('codeSection').classList.remove('hidden');
+            
+            alert(`Verification code sent to ${phone}: ${code}`);
         };
         
         document.getElementById('signupBtn').onclick = () => {
