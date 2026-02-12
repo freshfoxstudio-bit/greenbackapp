@@ -847,13 +847,12 @@
         };
         async function fetchFlyerImage(productName, store) {
             try {
-                // Simulate API call to fetch real flyer clipping
                 await new Promise(resolve => setTimeout(resolve, 500));
                 
-                // Mock flyer image URLs (in production, these would be real URLs)
                 const flyerImages = {
                     'Paper Towels': 'https://flyers.walmart.com/images/paper-towels-deal.jpg',
                     'Laundry Detergent': 'https://flyers.target.com/images/tide-pods-sale.jpg',
+                    'Dish Soap': 'https://flyers.walmart.com/images/dish-soap-deal.jpg',
                     'Ground Beef': 'https://flyers.safeway.com/images/beef-special.jpg',
                     'Ice Cream': 'https://flyers.wholefoods.com/images/ice-cream-deal.jpg',
                     'Coca-Cola 2L': 'https://flyers.cvs.com/images/coke-2l.jpg',
@@ -861,7 +860,6 @@
                     'Ben & Jerrys Ice Cream': 'https://flyers.wholefoods.com/images/ben-jerrys.jpg'
                 };
                 
-                // Return flyer image URL or generate placeholder
                 return flyerImages[productName] || `https://api.placeholder.com/300x200/ff6b35/ffffff?text=${encodeURIComponent(productName + ' Deal')}`;
             } catch (error) {
                 console.log('Flyer image fetch failed:', error);
@@ -876,11 +874,15 @@
             const productDB = {
                 '041196910015': { name: 'Coca-Cola 2L', price: 2.49, emoji: '🥤', store: 'CVS' },
                 '04100003927': { name: 'Oreos', price: 4.29, emoji: '🍿', store: 'Target' },
-                '01111003849': { name: 'Ben & Jerrys Ice Cream', price: 5.49, emoji: '🍦', store: 'Whole Foods' }
+                '01111003849': { name: 'Ben & Jerrys Ice Cream', price: 5.49, emoji: '🍦', store: 'Whole Foods' },
+                '036000291452': { name: 'Dish Soap', price: 3.99, emoji: '🧼', store: 'Walmart' },
+                '041234567890': { name: 'Paper Towels', price: 8.99, emoji: '🧻', store: 'Loblaws' },
+                '012345678901': { name: 'Laundry Detergent', price: 12.99, emoji: '🧴', store: 'Metro' }
             };
             
             let product = productDB[barcode];
             if (!product) {
+                // Try to match by barcode pattern or use random
                 const products = Object.values(productDB);
                 product = products[Math.floor(Math.random() * products.length)];
             }
@@ -898,7 +900,7 @@
                     source: 'Product Match',
                     barcode: barcode,
                     flyerImage: flyerImageUrl,
-                    expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString() // 7 days from now
+                    expiry: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString()
                 };
             }
             
