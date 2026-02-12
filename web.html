@@ -823,11 +823,13 @@
                     if (product) {
                         msg.textContent = `✅ Found: ${product.name} - ${product.coupon}`;
                         cartItems.push(product);
+                        scannedItems.push(product); // Track for deals comparison
                         updateCart();
                     } else {
                         msg.textContent = '✅ Scan complete! Item added to cart.';
                         const fallback = { name: 'Demo Item', price: 5.99, sale: 3.99, savings: 2.00, emoji: '🛒' };
                         cartItems.push(fallback);
+                        scannedItems.push(fallback); // Track for deals comparison
                         updateCart();
                     }
                     
@@ -983,43 +985,83 @@
             updateCart();
         }
         
-        // Deals functions
+        // Deals functions - only show cheaper alternatives
+        let scannedItems = []; // Track scanned items
+        
         function updateDeals() {
             const container = document.getElementById('dealsList');
+            
+            if (scannedItems.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--muted);">Scan items to see cheaper deals at other stores</p>';
+                return;
+            }
+            
+            const deals = [];
+            
+            // Check each scanned item for cheaper alternatives
+            scannedItems.forEach(scannedItem => {
+                const alternatives = [
+                    { name: scannedItem.name, store: 'Walmart', price: scannedItem.price * 0.85, emoji: '🏪' },
+                    { name: scannedItem.name, store: 'Target', price: scannedItem.price * 0.90, emoji: '🎯' },
+                    { name: scannedItem.name, store: 'Loblaws', price: scannedItem.price * 0.88, emoji: '🛒' },
+                    { name: scannedItem.name, store: 'Metro', price: scannedItem.price * 0.92, emoji: '🏬' }
+                ];
+                
+                // Only add if cheaper than scanned price
+                alternatives.forEach(alt => {
+                    if (alt.price < scannedItem.price) {
+                        const savings = scannedItem.price - alt.price;
+                        deals.push({
+                            ...alt,
+                            originalPrice: scannedItem.price,
+                            savings: savings,
+                            coupon: '🎫 ' + Math.round((savings / scannedItem.price) * 100) + '% OFF',
+                            source: 'Price Match',
+                            barcode: scannedItem.barcode,
+                            flyerImage: 'https://api.placeholder.com/300x200/ff6b35/ffffff?text=' + encodeURIComponent(alt.store + ' Deal')
+                        });
+                    }
+                });
+            });
+            
+            if (deals.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--muted);">No cheaper deals found for scanned items</p>';
+                return;
+            }
+            
             container.innerHTML = deals.map(deal => `
                 <div class="deal-item">
                     <h4>${deal.emoji} ${deal.name}</h4>
-                    <p>Regular: $${deal.price.toFixed(2)} → Sale: $${deal.sale.toFixed(2)}</p>
-                    <p style="color: var(--neon);">Save: $${deal.savings.toFixed(2)}</p>
+                    ${deal.flyerImage ? `
+                        <div style="margin: 10px 0;">
+                            <img src="${deal.flyerImage}" alt="${deal.name} Flyer" style="width: 100%; max-width: 200px; height: auto; border: 2px solid #ff6b35; border-radius: 8px;">
+                            <p style="font-size: 12px; color: var(--muted); margin: 5px 0;">📄 ${deal.store} Flyer Clipping</p>
+                        </div>
+                    ` : ''}
+                    <p>Your price: $${deal.originalPrice.toFixed(2)} → ${deal.store}: $${deal.price.toFixed(2)}</p>
+                    <p style="color: var(--neon);">Save: $${deal.savings.toFixed(2)} ${deal.coupon}</p>
+                    <p style="color: var(--muted); font-size: 12px;">Source: ${deal.source}</p>
+                    <button onclick="addDealToCart('${deal.name}', ${deal.price}, ${deal.savings}, '${deal.coupon}', '${deal.store}')" style="background: var(--neon); color: var(--bg); border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 8px;">
+                        Add to Cart
+                    </button>
                 </div>
             `).join('');
         }
         
-        // Profile functions with savings dashboard
-        function updateProfile() {
-            const profileInfo = document.getElementById('profileInfo');
-            if (!currentUser) return;
-            
-            let adminBadge = '';
-            if (currentUser.phone === ADMIN_PHONE) {
-                adminBadge = '<div style="background: gold; color: black; padding: 5px 10px; border-radius: 5px; font-weight: bold; margin-bottom: 10px;">👑 ADMIN ACCESS</div>';
-            }
-            
-            profileInfo.innerHTML = `
-                ${adminBadge}
-                <p><strong>Phone:</strong> ${currentUser.phone}</p>
-                <p><strong>Trial Days Left:</strong> ${currentUser.trialDaysLeft || 30}</p>
-                <p><strong>Subscription:</strong> ${currentUser.isSubscribed ? 'Premium' : 'Free'}</p>
-                <p><strong>Current Trip Savings:</strong> $${(currentUser.savings?.current || 0).toFixed(2)}</p>
-                <p><strong>Monthly Savings:</strong> $${(currentUser.savings?.month || 0).toFixed(2)}</p>
-                <p><strong>Yearly Savings:</strong> $${(currentUser.savings?.year || 0).toFixed(2)}</p>
-                <p><strong>Lifetime Savings:</strong> $${(currentUser.savings?.lifetime || 0).toFixed(2)}</p>
-                ${currentUser.spousePhone ? `<p><strong>Spouse:</strong> ${currentUser.spousePhone}</p>` : ''}
-            `;
-            document.getElementById('currentTripSavings').textContent = '$' + savings.current.toFixed(2);
-            document.getElementById('monthlySavings').textContent = '$' + savings.month.toFixed(2);
-            document.getElementById('yearlySavings').textContent = '$' + savings.year.toFixed(2);
-            document.getElementById('lifetimeSavings').textContent = '$' + savings.lifetime.toFixed(2);
+        // Add deal to cart
+        function addDealToCart(name, price, savings, coupon, store) {
+            cartItems.push({
+                name: name,
+                price: price,
+                sale: price,
+                savings: savings,
+                coupon: coupon,
+                source: store + ' Deal',
+                emoji: '🏷️',
+                flyerImage: 'https://api.placeholder.com/300x200/ff6b35/ffffff?text=' + encodeURIComponent(store + ' Deal')
+            });
+            updateCart();
+            alert('Added ' + name + ' from ' + store + ' to cart! You save $' + savings.toFixed(2));
         }
         
         // Logout
