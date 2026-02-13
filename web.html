@@ -615,6 +615,68 @@
             document.getElementById('signinForm').classList.remove('hidden');
         };
         
+        // Sign up function
+        document.getElementById('signupBtn').onclick = () => {
+            const phone = document.getElementById('signupPhone').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirm = document.getElementById('signupConfirm').value;
+            
+            if (!phone || !password || password !== confirm) {
+                alert('Please fill all fields correctly');
+                return;
+            }
+            
+            currentUser = {
+                phone,
+                trialDaysLeft: 30,
+                isSubscribed: false,
+                isPhoneVerified: false,
+                signupTime: Date.now(),
+                savings: { current: 0, month: 0, year: 0, lifetime: 0 }
+            };
+            
+            localStorage.setItem('greenbackUser', JSON.stringify(currentUser));
+            
+            // Start 36-hour verification timer
+            startVerificationTimer(phone);
+            
+            document.getElementById('authPage').classList.remove('active');
+            document.getElementById('appPages').classList.remove('hidden');
+            
+            alert('Account created! Please verify your phone within 36 hours.');
+        };
+        
+        // Sign in function
+        document.getElementById('signinBtn').onclick = () => {
+            const phone = document.getElementById('signinPhone').value;
+            const password = document.getElementById('signinPassword').value;
+            
+            if (!phone || !password) {
+                alert('Please enter phone and password');
+                return;
+            }
+            
+            // Simple login - accept any password for demo
+            currentUser = {
+                phone,
+                trialDaysLeft: 30,
+                isSubscribed: false,
+                isPhoneVerified: false,
+                signupTime: Date.now(),
+                savings: { current: 0, month: 0, year: 0, lifetime: 0 }
+            };
+            
+            localStorage.setItem('greenbackUser', JSON.stringify(currentUser));
+            
+            // Start 36-hour verification timer
+            startVerificationTimer(phone);
+            
+            document.getElementById('authPage').classList.remove('active');
+            document.getElementById('appPages').classList.remove('hidden');
+            
+            alert('Login successful!');
+        };
+        
         document.getElementById('sendCodeBtn').onclick = () => {
             const phone = document.getElementById('phoneInput').value;
             if (!phone || phone.length < 10) {
