@@ -225,7 +225,16 @@
                         <h4 style="color: white; margin-bottom: 10px; font-size: 18px;">🔐 Complete Your Profile Setup</h4>
                         <div style="color: #ffd700; font-size: 20px; font-weight: bold; margin-bottom: 8px;" id="countdown">36:00:00</div>
                         <div style="color: rgba(255,255,255,0.9); font-size: 14px; margin-bottom: 15px;">Verify your phone to unlock premium features</div>
-                        <button id="resendCodeBtn" class="auth-btn" style="background: #ffd700; color: #333; font-weight: bold; margin-top: 10px; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">📱 Send Verification Code</button>
+                        
+                        <!-- Early Bird Discount Section -->
+                        <div id="earlyBirdSection" style="background: rgba(255,215,0,0.2); padding: 15px; border-radius: 8px; margin: 15px 0; border: 2px solid #ffd700;">
+                            <h5 style="color: #ffd700; margin-bottom: 8px;">🎯 EARLY BIRD OFFER!</h5>
+                            <div style="color: white; font-size: 16px; font-weight: bold; margin-bottom: 5px;">50% OFF First Month</div>
+                            <div style="color: rgba(255,255,255,0.8); font-size: 12px;">Add payment details within 36hrs to unlock</div>
+                            <button id="addPaymentBtn" class="auth-btn" style="background: #ffd700; color: #333; font-weight: bold; margin-top: 10px; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">💳 Add Payment Details</button>
+                        </div>
+                        
+                        <button id="resendCodeBtn" class="auth-btn" style="background: rgba(255,255,255,0.2); color: white; font-weight: bold; margin-top: 10px; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">📱 Send Verification Code</button>
                         <div style="color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 10px;">✨ Get exclusive deals & faster checkout</div>
                     </div>
                 </div>
@@ -633,6 +642,8 @@
                 isSubscribed: false,
                 isPhoneVerified: false,
                 signupTime: Date.now(),
+                hasCardOnFile: false, // Track if card added
+                discountEligible: true, // 36hr discount window
                 savings: { current: 0, month: 0, year: 0, lifetime: 0 }
             };
             
@@ -644,7 +655,7 @@
             document.getElementById('authPage').classList.remove('active');
             document.getElementById('appPages').classList.remove('hidden');
             
-            showNotification('Welcome to Greenback! 🎉 Complete your profile to unlock premium features.', 'success');
+            showNotification('Welcome to Greenback! 🎉 Add payment details within 36hrs for 50% off your first month!', 'success');
         };
         
         // Sign in function
@@ -931,17 +942,71 @@
         `;
         document.head.appendChild(style);
         
-        // Resend code button
-        document.getElementById('resendCodeBtn').onclick = () => {
+        // Add payment details button
+        document.getElementById('addPaymentBtn').onclick = () => {
             if (!currentUser) return;
             
-            const phone = currentUser.phone;
-            const code = Math.floor(100000 + Math.random() * 900000).toString();
-            localStorage.setItem('verificationCode_' + phone, code);
-            localStorage.setItem('codeExpiry_' + phone, Date.now() + 300000);
+            const hoursElapsed = (Date.now() - currentUser.signupTime) / (1000 * 60 * 60);
             
-            showNotification(`📱 Verification code sent: ${code}`, 'success');
+            if (hoursElapsed >= 36 || !currentUser.discountEligible) {
+                showNotification('Early bird discount expired. Full price applies.', 'warning');
+                currentUser.hasCardOnFile = true;
+                currentUser.discountEligible = false;
+            } else {
+                showNotification('🎉 Early bird discount activated! 50% off first month!', 'success');
+                currentUser.hasCardOnFile = true;
+                currentUser.discountApplied = true;
+                currentUser.firstMonthPrice = 4.99; // 50% off $9.99
+            }
+            
+            localStorage.setItem('greenbackUser', JSON.stringify(currentUser));
+            
+            // Update UI to show discount status
+            const earlyBirdSection = document.getElementById('earlyBirdSection');
+            if (currentUser.discountApplied) {
+                earlyBirdSection.innerHTML = `
+                    <h5 style="color: #00ff00; margin-bottom: 8px;">✅ DISCOUNT LOCKED IN!</h5>
+                    <div style="color: white; font-size: 16px; font-weight: bold; margin-bottom: 5px;">First Month: $4.99</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 12px;">50% discount applied</div>
+                `;
+            } else {
+                earlyBirdSection.innerHTML = `
+                    <h5 style="color: #ff6b35; margin-bottom: 8px;">⏰ OFFER EXPIRED</h5>
+                    <div style="color: white; font-size: 16px; font-weight: bold; margin-bottom: 5px;">Full Price: $9.99/month</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 12px;">Early bird window closed</div>
+                `;
+            }
         };
+        
+        // Update countdown to check discount eligibility
+        function updateCountdown() {
+            const now = Date.now();
+            const elapsed = now - currentUser.signupTime;
+            const remaining = Math.max(0, 36 * 60 * 60 * 1000 - elapsed);
+            
+            const hours = Math.floor(remaining / (60 * 60 * 1000));
+            const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
+            const seconds = Math.floor((remaining % (60 * 1000)) / 1000);
+            
+            document.getElementById('countdown').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Check if discount window expired
+            if (remaining === 0 && currentUser.discountEligible) {
+                currentUser.discountEligible = false;
+                localStorage.setItem('greenbackUser', JSON.stringify(currentUser));
+                
+                const earlyBirdSection = document.getElementById('earlyBirdSection');
+                earlyBirdSection.innerHTML = `
+                    <h5 style="color: #ff6b35; margin-bottom: 8px;">⏰ OFFER EXPIRED</h5>
+                    <div style="color: white; font-size: 16px; font-weight: bold; margin-bottom: 5px;">Full Price: $9.99/month</div>
+                    <div style="color: rgba(255,255,255,0.8); font-size: 12px;">Early bird window closed</div>
+                    <button id="addPaymentBtn" class="auth-btn" style="background: #ff6b35; color: white; font-weight: bold; margin-top: 10px; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">💳 Add Payment Details</button>
+                `;
+                
+                showNotification('Early bird discount expired. Full price applies.', 'warning');
+            }
+        }
         
         // Paywall enforcement
         function enforcePaywall() {
@@ -1315,28 +1380,33 @@
             document.getElementById('appPages').classList.add('hidden');
         };
         
-        // Navigation
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const page = e.target.dataset.page;
-                
-                // Hide all pages
-                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                
-                // Show selected page
-                document.getElementById(page + 'Page').classList.add('active');
-                
-                // Update nav buttons
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
-                
-                // Update page content
-                if (page === 'cart') updateCart();
-                if (page === 'deals') updateDeals();
-                if (page === 'profile') updateProfile();
-                if (page === 'scan') updateScanPageSavings();
+        // Navigation - Fix event listeners
+        function setupNavigation() {
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const page = e.target.dataset.page;
+                    
+                    // Hide all pages
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                    
+                    // Show selected page
+                    document.getElementById(page + 'Page').classList.add('active');
+                    
+                    // Update nav buttons
+                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    // Update page content
+                    if (page === 'cart') updateCart();
+                    if (page === 'deals') updateDeals();
+                    if (page === 'profile') updateProfile();
+                    if (page === 'scan') updateScanPageSavings();
+                });
             });
-        });
+        }
+        
+        // Call navigation setup
+        setupNavigation();
         
         // Verification timer and lockout system
         function startVerificationTimer(phone) {
