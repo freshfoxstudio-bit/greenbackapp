@@ -652,8 +652,12 @@
             // Start 36-hour verification timer
             startVerificationTimer(phone);
             
+            // Show app pages and hide auth
             document.getElementById('authPage').classList.remove('active');
             document.getElementById('appPages').classList.remove('hidden');
+            
+            // Setup navigation after login
+            setupNavigation();
             
             showNotification('Welcome to Greenback! 🎉 Add payment details within 36hrs for 50% off your first month!', 'success');
         };
@@ -683,8 +687,12 @@
             // Start 36-hour verification timer
             startVerificationTimer(phone);
             
+            // Show app pages and hide auth
             document.getElementById('authPage').classList.remove('active');
             document.getElementById('appPages').classList.remove('hidden');
+            
+            // Setup navigation after login
+            setupNavigation();
             
             showNotification('Welcome back! 🛒 Ready to save money?', 'success');
         };
