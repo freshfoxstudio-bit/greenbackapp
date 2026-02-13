@@ -1382,15 +1382,26 @@
         
         // Navigation - Fix event listeners
         function setupNavigation() {
-            document.querySelectorAll('.nav-btn').forEach(btn => {
+            console.log('Setting up navigation...');
+            const navButtons = document.querySelectorAll('.nav-btn');
+            console.log('Found nav buttons:', navButtons.length);
+            
+            navButtons.forEach(btn => {
                 btn.addEventListener('click', (e) => {
+                    console.log('Nav button clicked:', e.target.dataset.page);
                     const page = e.target.dataset.page;
                     
                     // Hide all pages
                     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
                     
                     // Show selected page
-                    document.getElementById(page + 'Page').classList.add('active');
+                    const targetPage = document.getElementById(page + 'Page');
+                    if (targetPage) {
+                        targetPage.classList.add('active');
+                        console.log('Showing page:', page + 'Page');
+                    } else {
+                        console.error('Page not found:', page + 'Page');
+                    }
                     
                     // Update nav buttons
                     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1438,6 +1449,13 @@
         if (savedUser) {
             currentUser = JSON.parse(savedUser);
             document.getElementById('phoneInput').value = currentUser.phone;
+        }
+        
+        // Initialize navigation after DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', setupNavigation);
+        } else {
+            setupNavigation();
         }
     </script>
 </body>
