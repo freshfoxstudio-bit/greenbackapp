@@ -221,11 +221,12 @@
                 
                 <!-- Phone Verification Timer -->
                 <div id="verificationTimer" class="profile-section" style="margin-top: 20px; display: none;">
-                    <h4 style="color: #ff4444; margin-bottom: 10px;">⚠️ PHONE VERIFICATION REQUIRED</h4>
-                    <div style="background: rgba(255,68,68,0.1); padding: 15px; border-radius: 8px; text-align: center;">
-                        <div style="font-size: 24px; font-weight: bold; color: #ff4444;" id="countdown">36:00:00</div>
-                        <div style="font-size: 14px; color: #ff4444; margin-top: 5px;">Time remaining to verify your phone number</div>
-                        <button id="resendCodeBtn" class="auth-btn" style="background: #ff6b35; margin-top: 10px;">Resend Code</button>
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                        <h4 style="color: white; margin-bottom: 10px; font-size: 18px;">🔐 Complete Your Profile Setup</h4>
+                        <div style="color: #ffd700; font-size: 20px; font-weight: bold; margin-bottom: 8px;" id="countdown">36:00:00</div>
+                        <div style="color: rgba(255,255,255,0.9); font-size: 14px; margin-bottom: 15px;">Verify your phone to unlock premium features</div>
+                        <button id="resendCodeBtn" class="auth-btn" style="background: #ffd700; color: #333; font-weight: bold; margin-top: 10px; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer;">📱 Send Verification Code</button>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 12px; margin-top: 10px;">✨ Get exclusive deals & faster checkout</div>
                     </div>
                 </div>
                 
@@ -622,7 +623,7 @@
             const confirm = document.getElementById('signupConfirm').value;
             
             if (!phone || !password || password !== confirm) {
-                alert('Please fill all fields correctly');
+                showNotification('Please complete all fields correctly', 'error');
                 return;
             }
             
@@ -643,7 +644,7 @@
             document.getElementById('authPage').classList.remove('active');
             document.getElementById('appPages').classList.remove('hidden');
             
-            alert('Account created! Please verify your phone within 36 hours.');
+            showNotification('Welcome to Greenback! 🎉 Complete your profile to unlock premium features.', 'success');
         };
         
         // Sign in function
@@ -652,7 +653,7 @@
             const password = document.getElementById('signinPassword').value;
             
             if (!phone || !password) {
-                alert('Please enter phone and password');
+                showNotification('Please enter your phone and password', 'error');
                 return;
             }
             
@@ -674,7 +675,7 @@
             document.getElementById('authPage').classList.remove('active');
             document.getElementById('appPages').classList.remove('hidden');
             
-            alert('Login successful!');
+            showNotification('Welcome back! 🛒 Ready to save money?', 'success');
         };
         
         document.getElementById('sendCodeBtn').onclick = () => {
@@ -881,6 +882,55 @@
             }
         }
         
+        // Modern notification system
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 12px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                max-width: 300px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+                animation: slideIn 0.3s ease;
+            `;
+            
+            const colors = {
+                success: 'linear-gradient(135deg, #00b09b, #96c93d)',
+                error: 'linear-gradient(135deg, #f093fb, #f5576c)',
+                info: 'linear-gradient(135deg, #667eea, #764ba2)',
+                warning: 'linear-gradient(135deg, #f093fb, #f5576c)'
+            };
+            
+            notification.style.background = colors[type] || colors.info;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Add animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+        
         // Resend code button
         document.getElementById('resendCodeBtn').onclick = () => {
             if (!currentUser) return;
@@ -890,7 +940,7 @@
             localStorage.setItem('verificationCode_' + phone, code);
             localStorage.setItem('codeExpiry_' + phone, Date.now() + 300000);
             
-            alert(`New verification code sent to ${phone}: ${code}`);
+            showNotification(`📱 Verification code sent: ${code}`, 'success');
         };
         
         // Paywall enforcement
@@ -906,7 +956,7 @@
             if (!currentUser.isPhoneVerified) {
                 const hoursElapsed = (Date.now() - currentUser.signupTime) / (1000 * 60 * 60);
                 if (hoursElapsed >= 36) {
-                    alert('Account locked. Please verify your phone number.');
+                    showNotification('Account locked. Please verify your phone number.', 'error');
                     return false;
                 }
             }
@@ -1264,6 +1314,29 @@
             document.getElementById('authPage').classList.add('active');
             document.getElementById('appPages').classList.add('hidden');
         };
+        
+        // Navigation
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const page = e.target.dataset.page;
+                
+                // Hide all pages
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                
+                // Show selected page
+                document.getElementById(page + 'Page').classList.add('active');
+                
+                // Update nav buttons
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // Update page content
+                if (page === 'cart') updateCart();
+                if (page === 'deals') updateDeals();
+                if (page === 'profile') updateProfile();
+                if (page === 'scan') updateScanPageSavings();
+            });
+        });
         
         // Verification timer and lockout system
         function startVerificationTimer(phone) {
