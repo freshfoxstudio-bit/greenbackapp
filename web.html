@@ -1380,40 +1380,39 @@
             document.getElementById('appPages').classList.add('hidden');
         };
         
-        // Navigation - Fix event listeners
+        // Navigation - Simple direct fix
         function setupNavigation() {
             console.log('Setting up navigation...');
-            const navButtons = document.querySelectorAll('.nav-btn');
-            console.log('Found nav buttons:', navButtons.length);
             
-            navButtons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    console.log('Nav button clicked:', e.target.dataset.page);
-                    const page = e.target.dataset.page;
-                    
-                    // Hide all pages
-                    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-                    
-                    // Show selected page
-                    const targetPage = document.getElementById(page + 'Page');
-                    if (targetPage) {
-                        targetPage.classList.add('active');
-                        console.log('Showing page:', page + 'Page');
-                    } else {
-                        console.error('Page not found:', page + 'Page');
-                    }
-                    
-                    // Update nav buttons
-                    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    
-                    // Update page content
-                    if (page === 'cart') updateCart();
-                    if (page === 'deals') updateDeals();
-                    if (page === 'profile') updateProfile();
-                    if (page === 'scan') updateScanPageSavings();
-                });
-            });
+            // Direct event listeners for each button
+            document.querySelector('[data-page="scan"]').onclick = () => showPage('scan');
+            document.querySelector('[data-page="cart"]').onclick = () => showPage('cart');
+            document.querySelector('[data-page="deals"]').onclick = () => showPage('deals');
+            document.querySelector('[data-page="profile"]').onclick = () => showPage('profile');
+        }
+        
+        // Simple page switcher
+        function showPage(pageName) {
+            console.log('Switching to page:', pageName);
+            
+            // Hide all pages
+            document.getElementById('scanPage').style.display = 'none';
+            document.getElementById('cartPage').style.display = 'none';
+            document.getElementById('dealsPage').style.display = 'none';
+            document.getElementById('profilePage').style.display = 'none';
+            
+            // Show selected page
+            document.getElementById(pageName + 'Page').style.display = 'block';
+            
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+            
+            // Update page content
+            if (pageName === 'cart') updateCart();
+            if (pageName === 'deals') updateDeals();
+            if (pageName === 'profile') updateProfile();
+            if (pageName === 'scan') updateScanPageSavings();
         }
         
         // Call navigation setup

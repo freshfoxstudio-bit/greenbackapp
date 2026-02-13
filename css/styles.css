@@ -51,7 +51,7 @@ body{
 
 .main-content{flex:1;overflow-y:auto;padding-bottom:70px}
 .page{display:none;padding:20px;width:100%}
-.page.active{display:flex;flex-direction:column}
+.page.active{display:block}
 .page.hidden{display:none}
 .page-header{text-align:center;margin-bottom:24px}
 .page-header h2{margin:0;color:var(--neon);font-size:24px}
